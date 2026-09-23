@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Italy Jeopardy — B2.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --verde:#009246;
+    --bianco:#FFFFFF;
+    --rosso:#CE2B37;
+    --navy:#0B1B3A;
+    --navy-2:#122a55;
+    --gold:#F4C542;
+    --board-bg:#0e2148;
+    --cell-bg:#173a72;
+    --cell-hover:#20488c;
+    --cell-done:#0a1730;
+    --text-light:#f3f6fc;
+    --text-dim:#9fb1d6;
+    --font-display:'Fredoka', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(circle at 15% 0%, #16336b 0%, transparent 45%),
+      radial-gradient(circle at 85% 10%, #1b3f80 0%, transparent 50%),
+      var(--navy);
+    color:var(--text-light);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  .flag-strip{
+    height:8px;
+    width:100%;
+    display:flex;
+    position:sticky;
+    top:env(safe-area-inset-top,0px);
+    z-index:20;
+  }
+  .flag-strip span{flex:1;}
+  .flag-strip .v{background:var(--verde);}
+  .flag-strip .b{background:var(--bianco);}
+  .flag-strip .r{background:var(--rosso);}
+
+  header{
+    text-align:center;
+    padding:28px 16px 18px;
+    position:relative;
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(2rem, 6vw, 3.2rem);
+    margin:0;
+    letter-spacing:0.5px;
+    background:linear-gradient(90deg, var(--verde) 0%, var(--bianco) 50%, var(--rosso) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    text-shadow:0 2px 18px rgba(0,0,0,.35);
+  }
+  h1 .fork{
+    display:inline-block;
+    transform:rotate(-8deg);
+  }
+  .subtitle{
+    margin:6px 0 0;
+    color:var(--text-dim);
+    font-size:0.95rem;
+    letter-spacing:0.3px;
+  }
+
+  .controls{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 16px 8px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:center;
+    justify-content:center;
+  }
+  .rounds{
+    display:flex;
+    gap:8px;
+    background:rgba(255,255,255,.06);
+    padding:6px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .round-btn{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:0.85rem;
+    border:none;
+    background:transparent;
+    color:var(--text-dim);
+    padding:8px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .18s ease, color .18s ease, transform .12s ease;
+  }
+  .round-btn:hover{transform:translateY(-1px);}
+  .round-btn.active{
+    background:linear-gradient(90deg, var(--verde), #00753a);
+    color:#fff;
+    box-shadow:0 4px 14px rgba(0,146,70,.4);
+  }
+  .reset-btn{
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.82rem;
+    border:1px solid rgba(206,43,55,.55);
+    background:rgba(206,43,55,.12);
+    color:#ff9aa3;
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .18s ease;
+  }
+  .reset-btn:hover{background:rgba(206,43,55,.25);}
+
+  .scoreboard{
+    max-width:760px;
+    margin:6px auto 22px;
+    padding:0 16px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .team{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:16px;
+    padding:14px 16px;
+    text-align:center;
+  }
+  .team.team-a{border-top:3px solid var(--verde);}
+  .team.team-b{border-top:3px solid var(--rosso);}
+  .team input{
+    background:transparent;
+    border:none;
+    color:var(--text-light);
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:1rem;
+    text-align:center;
+    width:100%;
+    border-bottom:1px dashed rgba(255,255,255,.25);
+    padding-bottom:4px;
+    margin-bottom:8px;
+  }
+  .team input:focus{outline:none; border-bottom-color:var(--gold);}
+  .score{
+    font-family:var(--font-display);
+    font-size:2.1rem;
+    font-weight:700;
+    color:var(--gold);
+    line-height:1;
+  }
+  .score-row{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:8px;
+  }
+  .score-row button{
+    width:30px;height:30px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.06);
+    color:var(--text-light);
+    font-size:1rem;
+    cursor:pointer;
+    line-height:1;
+  }
+  .score-row button:hover{background:rgba(255,255,255,.15);}
+
+  .board-wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 16px 48px;
+    overflow-x:auto;
+  }
+  .board{
+    background:var(--board-bg);
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+    overflow:hidden;
+    min-width:560px;
+  }
+  .board-header{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+  }
+  .cat-head{
+    text-align:center;
+    padding:16px 8px 14px;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(0.75rem, 1.6vw, 1rem);
+    letter-spacing:0.4px;
+    color:#fff;
+    background:linear-gradient(180deg, #163a75, #0f2c5e);
+    border-bottom:2px solid var(--gold);
+  }
+  .cat-head .emoji{
+    display:block;
+    font-size:1.5rem;
+    margin-bottom:4px;
+  }
+  .board-body{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+  }
+  .cell{
+    aspect-ratio:5/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--cell-bg);
+    border:1px solid rgba(255,255,255,.06);
+    cursor:pointer;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(1rem, 2.4vw, 1.5rem);
+    color:var(--gold);
+    transition:background .15s ease, transform .1s ease;
+  }
+  .cell:hover{background:var(--cell-hover); transform:scale(1.02);}
+  .cell.done{
+    background:var(--cell-done);
+    color:rgba(244,197,66,.25);
+    cursor:default;
+  }
+  .cell.done:hover{transform:none; background:var(--cell-done);}
+  .cell.done::after{
+    content:"✓";
+    font-size:1rem;
+    margin-left:6px;
+    color:rgba(0,146,70,.6);
+  }
+
+  footer{
+    text-align:center;
+    padding:10px 16px 32px;
+    color:var(--text-dim);
+    font-size:0.78rem;
+  }
+
+  /* modal */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(4,10,26,.72);
+    backdrop-filter:blur(3px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    width:100%;
+    max-width:620px;
+    background:linear-gradient(180deg, #123064, #0c2049);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:22px;
+    padding:28px 26px 24px;
+    box-shadow:0 30px 70px rgba(0,0,0,.5);
+    animation:pop .22s ease;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  @keyframes pop{
+    from{opacity:0; transform:scale(.94) translateY(8px);}
+    to{opacity:1; transform:scale(1) translateY(0);}
+  }
+  .modal-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .modal-tag{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:0.85rem;
+    color:var(--gold);
+    letter-spacing:0.4px;
+  }
+  .close-btn{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-size:1.4rem;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 6px;
+  }
+  .close-btn:hover{color:#fff;}
+
+  .img-slot{
+    border:2px dashed rgba(255,255,255,.22);
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.82rem;
+    margin-bottom:16px;
+    background:rgba(255,255,255,.03);
+  }
+  .img-slot .ph-emoji{font-size:1.6rem; display:block; margin-bottom:6px;}
+  .img-slot code{
+    display:inline-block;
+    margin-top:4px;
+    background:rgba(0,0,0,.25);
+    padding:2px 8px;
+    border-radius:6px;
+    color:var(--text-light);
+    font-size:0.78rem;
+  }
+
+  .question-text{
+    font-size:1.15rem;
+    line-height:1.5;
+    margin:0 0 18px;
+  }
+  .answer-box{
+    display:none;
+    background:rgba(0,146,70,.14);
+    border:1px solid rgba(0,146,70,.4);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:18px;
+  }
+  .answer-box.show{display:block;}
+  .answer-box .label{
+    font-family:var(--font-display);
+    font-size:0.78rem;
+    color:#5fd68a;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin-bottom:4px;
+  }
+  .answer-box .answer-text{
+    font-size:1.1rem;
+    font-weight:600;
+  }
+
+  .modal-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .btn{
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.88rem;
+    border:none;
+    border-radius:12px;
+    padding:11px 16px;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+    flex:1 1 auto;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-reveal{
+    background:var(--gold);
+    color:#1b1400;
+    width:100%;
+  }
+  .btn-team-a{background:var(--verde); color:#fff;}
+  .btn-team-b{background:var(--rosso); color:#fff;}
+  .btn-nobody{
+    background:rgba(255,255,255,.08);
+    color:var(--text-light);
+    border:1px solid rgba(255,255,255,.18);
+  }
+
+  @media (max-width:480px){
+    .scoreboard{grid-template-columns:1fr 1fr; gap:10px;}
+    .modal{padding:22px 18px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="flag-strip"><span class="v"></span><span class="b"></span><span class="r"></span></div>
+
+<header>
+  <h1><span class="fork">🍝</span> ITALY JEOPARDY</h1>
+  <p class="subtitle">B2.1 English Class · Semana del Bilingüismo</p>
+</header>
+
+<div class="controls">
+  <div class="rounds" id="rounds">
+    <button class="round-btn active" data-game="0">Juego 1</button>
+    <button class="round-btn" data-game="1">Juego 2</button>
+    <button class="round-btn" data-game="2">Juego 3</button>
+  </div>
+  <button class="reset-btn" id="resetBtn">↺ Reiniciar juego actual</button>
+</div>
+
+<div class="scoreboard">
+  <div class="team team-a">
+    <input id="teamAName" value="Team A" maxlength="20">
+    <div class="score" id="teamAScore">0</div>
+    <div class="score-row">
+      <button data-team="A" data-delta="-100">−</button>
+      <button data-team="A" data-delta="100">+</button>
+    </div>
+  </div>
+  <div class="team team-b">
+    <input id="teamBName" value="Team B" maxlength="20">
+    <div class="score" id="teamBScore">0</div>
+    <div class="score-row">
+      <button data-team="B" data-delta="-100">−</button>
+      <button data-team="B" data-delta="100">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board">
+    <div class="board-header" id="boardHeader"></div>
+    <div class="board-body" id="boardBody"></div>
+  </div>
+</div>
+
+<footer>Haz clic en un valor de puntos para mostrar la pregunta · las imágenes se agregarán pronto 🖼️</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-tag" id="modalTag">FOOD · 100</span>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+    <div class="img-slot" id="imgSlot">
+      <span class="ph-emoji">🖼️</span>
+      Espacio para imagen
+      <div><code id="imgCode">FOOD-100-1.jpg</code></div>
+    </div>
+    <p class="question-text" id="questionText"></p>
+    <div class="answer-box" id="answerBox">
+      <div class="label">ANSWER</div>
+      <div class="answer-text" id="answerText"></div>
+    </div>
+    <div class="modal-actions" id="modalActions">
+      <button class="btn btn-reveal" id="revealBtn">Mostrar respuesta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  FOOD: { emoji: "🍕", label: "FOOD", levels: {
+    100: [
+      { q: "What is Italy's most famous baked dish made with dough, tomato sauce, and cheese?", a: "Pizza", img: "FOOD-100-1" },
+      { q: "What is the Italian word for \"bread\"?", a: "Pane", img: "FOOD-100-2" },
+      { q: "What popular Italian drink is made from espresso and steamed milk foam?", a: "Cappuccino", img: "FOOD-100-3" },
+    ],
+    200: [
+      { q: "What is the name of the coffee-flavored Italian dessert made with mascarpone cheese?", a: "Tiramisu", img: "FOOD-200-1" },
+      { q: "What is the Italian word for \"ice cream\"?", a: "Gelato", img: "FOOD-200-2" },
+      { q: "What long, thin type of pasta is one of the most popular in the world?", a: "Spaghetti", img: "FOOD-200-3" },
+    ],
+    300: [
+      { q: "Which Italian region is famous for producing Parmigiano-Reggiano cheese?", a: "Emilia-Romagna", img: "FOOD-300-1" },
+      { q: "What is \"prosciutto\"?", a: "Italian dry-cured ham", img: "FOOD-300-2" },
+      { q: "What is the name of the green sauce made from basil, garlic, pine nuts, olive oil, and Parmesan?", a: "Pesto", img: "FOOD-300-3" },
+    ],
+    400: [
+      { q: "What classic Neapolitan pizza is named after a queen and represents the colors of the Italian flag?", a: "Pizza Margherita", img: "FOOD-400-1" },
+      { q: "What is \"risotto\" and what is its main ingredient?", a: "A creamy Italian rice dish; rice (usually Arborio rice)", img: "FOOD-400-2" },
+      { q: "What Italian sparkling wine is often used to make Mimosas?", a: "Prosecco", img: "FOOD-400-3" },
+    ],
+    500: [
+      { q: "What is the name of the traditional Sicilian dessert made of fried pastry tubes filled with sweet ricotta?", a: "Cannoli", img: "FOOD-500-1" },
+      { q: "In Italian cooking, what does the term \"al dente\" mean?", a: "Cooked firm to the bite (not too soft)", img: "FOOD-500-2" },
+      { q: "What Italian region is considered the birthplace of pizza, and what is its capital city?", a: "Campania (capital: Naples)", img: "FOOD-500-3" },
+    ],
+  }},
+  PEOPLE: { emoji: "👤", label: "FAMOUS PEOPLE", levels: {
+    100: [
+      { q: "Who painted the Mona Lisa?", a: "Leonardo da Vinci", img: "PEOPLE-100-1" },
+      { q: "Who is the Italian explorer who sailed to America in 1492?", a: "Christopher Columbus", img: "PEOPLE-100-2" },
+      { q: "Who is the famous Italian opera singer known for the song \"Nessun Dorma\"?", a: "Luciano Pavarotti", img: "PEOPLE-100-3" },
+    ],
+    200: [
+      { q: "Who painted the ceiling of the Sistine Chapel?", a: "Michelangelo", img: "PEOPLE-200-1" },
+      { q: "Which Italian actress starred in many classic movies and won an Oscar?", a: "Sophia Loren", img: "PEOPLE-200-2" },
+      { q: "Which blind Italian singer is famous for the song \"Time to Say Goodbye\"?", a: "Andrea Bocelli", img: "PEOPLE-200-3" },
+    ],
+    300: [
+      { q: "Which famous Italian sports car brand did Enzo Ferrari create?", a: "Ferrari", img: "PEOPLE-300-1" },
+      { q: "Which Italian fashion designer created the brand Gucci?", a: "Guccio Gucci", img: "PEOPLE-300-2" },
+      { q: "Who wrote the famous poem \"The Divine Comedy\"?", a: "Dante Alighieri", img: "PEOPLE-300-3" },
+    ],
+    400: [
+      { q: "Which Italian scientist said that the Earth moves around the Sun?", a: "Galileo Galilei", img: "PEOPLE-400-1" },
+      { q: "Which Italian actor and director won an Oscar for the movie \"Life Is Beautiful\"?", a: "Roberto Benigni", img: "PEOPLE-400-2" },
+      { q: "Which fashion designer, famous for bold prints and sunglasses, founded the label Versace?", a: "Gianni Versace", img: "PEOPLE-400-3" },
+    ],
+    500: [
+      { q: "Which Italian traveler became famous for his journeys to China in the 13th century?", a: "Marco Polo", img: "PEOPLE-500-1" },
+      { q: "Which Italian explorer gave his name to the continent of \"America\"?", a: "Amerigo Vespucci", img: "PEOPLE-500-2" },
+      { q: "Which Italian family from Cremona is famous for making some of the best violins ever built?", a: "The Stradivari family (Stradivarius)", img: "PEOPLE-500-3" },
+    ],
+  }},
+  HIST: { emoji: "🏛️", label: "HISTORY", levels: {
+    100: [
+      { q: "What is the name of the ancient Roman arena where gladiators fought?", a: "The Colosseum", img: "HIST-100-1" },
+      { q: "What ancient empire was ruled from the city of Rome?", a: "The Roman Empire", img: "HIST-100-2" },
+      { q: "What ancient Italian city was buried by a volcano eruption in 79 AD?", a: "Pompeii", img: "HIST-100-3" },
+    ],
+    200: [
+      { q: "Which famous Roman leader was killed on the \"Ides of March\"?", a: "Julius Caesar", img: "HIST-200-1" },
+      { q: "What art and culture movement began in Italy and means \"rebirth\"?", a: "The Renaissance", img: "HIST-200-2" },
+      { q: "In which Italian city did the Renaissance begin?", a: "Florence", img: "HIST-200-3" },
+    ],
+    300: [
+      { q: "What tiny country, home of the Pope, is located inside the city of Rome?", a: "Vatican City", img: "HIST-300-1" },
+      { q: "Which dictator ruled Italy during World War II?", a: "Benito Mussolini", img: "HIST-300-2" },
+      { q: "In what century did Christopher Columbus sail to America — the 15th, 17th, or 19th century?", a: "The 15th century (1492)", img: "HIST-300-3" },
+    ],
+    400: [
+      { q: "In what year was Italy united as one country — 1861, 1901, or 1945?", a: "1861", img: "HIST-400-1" },
+      { q: "Who was the military leader who helped unite Italy and is remembered as a national hero?", a: "Giuseppe Garibaldi", img: "HIST-400-2" },
+      { q: "What did the ancient Romans build to carry water into their cities?", a: "Aqueducts", img: "HIST-400-3" },
+    ],
+    500: [
+      { q: "In what year did Italy become a republic and stop having a king?", a: "1946", img: "HIST-500-1" },
+      { q: "Who was the first Roman Emperor?", a: "Augustus", img: "HIST-500-2" },
+      { q: "What was the name of the famous stone road the Romans built to connect Rome to southern Italy?", a: "The Appian Way", img: "HIST-500-3" },
+    ],
+  }},
+  FACTS: { emoji: "🎲", label: "FUN FACTS", levels: {
+    100: [
+      { q: "What shape does Italy look like on a map?", a: "A boot", img: "FACTS-100-1" },
+      { q: "What is the name of the famous leaning tower in Italy?", a: "The Leaning Tower of Pisa", img: "FACTS-100-2" },
+      { q: "What are the colors of the Italian flag?", a: "Green, white, and red", img: "FACTS-100-3" },
+    ],
+    200: [
+      { q: "What is the smallest country in the world, located inside the city of Rome?", a: "Vatican City", img: "FACTS-200-1" },
+      { q: "What Italian city has canals instead of streets, where people travel by boat?", a: "Venice", img: "FACTS-200-2" },
+      { q: "What is the name of Italy's active volcano near the city of Naples?", a: "Mount Vesuvius", img: "FACTS-200-3" },
+    ],
+    300: [
+      { q: "What is the name of the famous fountain in Rome where people throw coins for good luck?", a: "Trevi Fountain", img: "FACTS-300-1" },
+      { q: "What sport is most popular in Italy?", a: "Football (soccer)", img: "FACTS-300-2" },
+      { q: "What was Italy's money called before the Euro?", a: "The Italian Lira", img: "FACTS-300-3" },
+    ],
+    400: [
+      { q: "What Italian island has the famous volcano Mount Etna?", a: "Sicily", img: "FACTS-400-1" },
+      { q: "About how many people live in Italy — closer to 20 million, 60 million, or 150 million?", a: "About 60 million", img: "FACTS-400-2" },
+      { q: "Which of these is NOT a sea near Italy: Adriatic Sea, Tyrrhenian Sea, or Baltic Sea?", a: "The Baltic Sea", img: "FACTS-400-3" },
+    ],
+    500: [
+      { q: "What is the name of Italy's longest river?", a: "The Po River", img: "FACTS-500-1" },
+      { q: "Which country has more UNESCO World Heritage Sites (protected historic places) than any other in the world?", a: "Italy", img: "FACTS-500-2" },
+      { q: "In which Italian city is the oldest university in the world located?", a: "Bologna", img: "FACTS-500-3" },
+    ],
+  }},
+};
+
+const CATS = ["FOOD", "PEOPLE", "HIST", "FACTS"];
+const POINTS = [100, 200, 300, 400, 500];
+
+let currentGame = 0;                 // 0,1,2 -> Juego 1/2/3
+let scores = { A: 0, B: 0 };
+// used[gameIndex][cat][points] = boolean
+let used = [0,1,2].map(() => {
+  const o = {};
+  CATS.forEach(c => { o[c] = {}; POINTS.forEach(p => o[c][p] = false); });
+  return o;
+});
+
+let activeCell = null; // { cat, points }
+
+const boardHeader = document.getElementById('boardHeader');
+const boardBody = document.getElementById('boardBody');
+const overlay = document.getElementById('overlay');
+const modalTag = document.getElementById('modalTag');
+const questionText = document.getElementById('questionText');
+const answerBox = document.getElementById('answerBox');
+const answerText = document.getElementById('answerText');
+const modalActions = document.getElementById('modalActions');
+const revealBtn = document.getElementById('revealBtn');
+const imgCode = document.getElementById('imgCode');
+const teamAScoreEl = document.getElementById('teamAScore');
+const teamBScoreEl = document.getElementById('teamBScore');
+const teamAName = document.getElementById('teamAName');
+const teamBName = document.getElementById('teamBName');
+
+function renderHeader(){
+  boardHeader.innerHTML = '';
+  CATS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'cat-head';
+    div.innerHTML = `<span class="emoji">${DATA[c].emoji}</span>${DATA[c].label}`;
+    boardHeader.appendChild(div);
+  });
+}
+
+function renderBoard(){
+  boardBody.innerHTML = '';
+  POINTS.forEach(p => {
+    CATS.forEach(c => {
+      const cell = document.createElement('div');
+      const isDone = used[currentGame][c][p];
+      cell.className = 'cell' + (isDone ? ' done' : '');
+      cell.textContent = isDone ? '' : p;
+      if(!isDone){
+        cell.addEventListener('click', () => openQuestion(c, p));
+      }
+      boardBody.appendChild(cell);
+    });
+  });
+}
+
+function openQuestion(cat, points){
+  activeCell = { cat, points };
+  const item = DATA[cat].levels[points][currentGame];
+  modalTag.textContent = `${DATA[cat].label} · ${points}`;
+  questionText.textContent = item.q;
+  answerText.textContent = item.a;
+  answerBox.classList.remove('show');
+  imgCode.textContent = item.img + '.jpg';
+  modalActions.innerHTML = '';
+  modalActions.appendChild(revealBtn);
+  overlay.classList.add('open');
+}
+
+revealBtn.addEventListener('click', () => {
+  answerBox.classList.add('show');
+  modalActions.innerHTML = `
+    <button class="btn btn-team-a" id="winA">✅ ${teamAName.value || 'Team A'}</button>
+    <button class="btn btn-team-b" id="winB">✅ ${teamBName.value || 'Team B'}</button>
+    <button class="btn btn-nobody" id="winNone">❌ Nadie acertó</button>
+  `;
+  document.getElementById('winA').addEventListener('click', () => finishQuestion('A'));
+  document.getElementById('winB').addEventListener('click', () => finishQuestion('B'));
+  document.getElementById('winNone').addEventListener('click', () => finishQuestion(null));
+});
+
+function finishQuestion(winner){
+  if(!activeCell) return;
+  const { cat, points } = activeCell;
+  if(winner){
+    scores[winner] += points;
+    updateScores();
+  }
+  used[currentGame][cat][points] = true;
+  closeModal();
+  renderBoard();
+}
+
+function closeModal(){
+  overlay.classList.remove('open');
+  activeCell = null;
+}
+document.getElementById('closeBtn').addEventListener('click', closeModal);
+overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(); });
+
+function updateScores(){
+  teamAScoreEl.textContent = scores.A;
+  teamBScoreEl.textContent = scores.B;
+}
+
+document.querySelectorAll('.score-row button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const team = btn.getAttribute('data-team');
+    const delta = parseInt(btn.getAttribute('data-delta'), 10);
+    scores[team] += delta;
+    updateScores();
+  });
+});
+
+document.getElementById('rounds').addEventListener('click', (e) => {
+  const btn = e.target.closest('.round-btn');
+  if(!btn) return;
+  document.querySelectorAll('.round-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentGame = parseInt(btn.getAttribute('data-game'), 10);
+  renderBoard();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  CATS.forEach(c => POINTS.forEach(p => used[currentGame][c][p] = false));
+  renderBoard();
+});
+
+renderHeader();
+renderBoard();
+updateScores();
+</script>
+</body>
+</html>
